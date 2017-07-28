@@ -1,0 +1,6 @@
+
+
+myPlusCommutes : (n : Nat) -> (m : Nat) -> n + m = m + n
+myPlusCommutes Z m = ?myPlusCommutes_rhs_1
+myPlusCommutes (S k) m = ?myPlusCommutes_rhs_2
+

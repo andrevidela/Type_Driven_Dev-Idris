@@ -1,0 +1,29 @@
+
+
+import System
+
+import data.Vect
+
+readToBlank: IO (List String)
+readToBlank = do input <- getLine
+                 if length input == 0
+                    then pure List.Nil
+                    else map (\tail => input :: tail) readToBlank
+
+readAndSave: IO ()
+readAndSave = do contentToSave <- readToBlank
+                 putStrLn "Enter a filname: "
+                 filename <- getLine
+                 let content = concat (intersperse "\n" contentToSave)
+                 result <- writeFile filename content 
+                 case result of
+                      Left _ => putStrLn "error while writing the file"
+                      Right _ => putStrLn "Successfully saved file"
+
+contentOfFile : File -> IO (n ** Vect n String)
+contentOfFile x = ?contentOfFile_rhs
+                 
+readVectFile : (filename: String) -> IO (n ** Vect n String)
+readVectFile filename = ?readVectFile_rhs
+
+                    

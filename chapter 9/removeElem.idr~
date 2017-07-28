@@ -1,0 +1,15 @@
+
+import Data.Vect
+
+MaryInVector : Elem "Mary" ["Peter", "Paul", "Mary"]
+MaryInVector = There (There Here)
+
+removeElem : (value : a) -> (xs : Vect (S n) a) -> (prf : Elem value xs) -> Vect n a
+removeElem value (value :: ys) Here = ys
+removeElem {n = Z} value (y :: []) (There later) = []
+removeElem {n = (S k)} value (y :: ys) (There later) = y :: removeElem value ys later
+
+removeElem_auto : (value : a) -> Vect (S n) a -> {auto prf : Elem value xs} -> Vect n a
+removeElem_auto value (x :: ys) {prf = Here} = ys
+removeElem_auto value (x :: []) {prf = (There later)} = ?rest
+removeElem_auto value (x :: (y :: z)) {prf = (There later)} = ?removeElem_auto_rhs_2

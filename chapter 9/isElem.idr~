@@ -1,0 +1,18 @@
+import Data.Vect
+
+cant_be_in_Nil : Elem value [] -> Void
+cant_be_in_Nil Here impossible
+cant_be_in_Nil (There _) impossible
+
+notInTail : (contra : (value = x) -> Void) -> (notThere : Elem value xs -> Void) -> Elem value (x :: xs) -> Void
+notInTail contra notThere Here = notThere ?notInTail
+notInTail contra notThere (There later) = notThere later
+
+myIsElem : DecEq ty => (value : ty) -> (ls : Vect n ty) -> Dec (Elem value ls)
+myIsElem value [] = No cant_be_in_Nil
+myIsElem value (x :: xs) = case decEq value x of
+                                Yes Refl => Yes Here
+                                No contra => case myIsElem value xs of
+                                                  Yes prf => Yes (There prf)
+                                                  No notThere => No (notInTail contra notThere)
+

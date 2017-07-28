@@ -1,0 +1,6 @@
+import datastore
+
+getValues : DataStore (SString .+. val_schema) -> List (SchemaType val_schema)
+getValues input with (storeView input)
+  getValues input | SNil = []
+  getValues (addToStore (key, value) store) | (SAdd rec) = value :: (getValues store | rec)

@@ -1,0 +1,18 @@
+
+%default total
+
+
+data Fuel = Dry | More (Lazy Fuel)
+
+
+data RunIO : Type -> Type where
+  Quit : a -> RunIO a
+  Do : IO a -> (a -> Inf (RunIO b)) -> RunIO b
+
+run : Fuel -> RunIO a -> IO (Maybe a)
+run Dry y = pure Nothing
+run (More x) (Quit y) = pure (Just y)
+run (More fuel) (Do action next) = do result <- action
+                                      run fuel (next result)
+
+data Command : Type -> Type where

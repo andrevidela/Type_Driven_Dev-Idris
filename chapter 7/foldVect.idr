@@ -1,0 +1,22 @@
+
+data Vect : (len: Nat) -> (elem: Type) -> Type where
+  Nil : Vect Z elem
+  (::) : (x : elem) -> (vect: Vect k elem) -> Vect (S k) elem
+
+%name Vect xs, ys, zs
+
+value : Vect 3 Integer
+value = 1 :: 2 :: 3 :: Nil
+
+Foldable (Vect n) where 
+  foldl f acc [] = acc
+  foldl f acc (x :: vect) = let computed = f acc x in
+                                foldl f computed vect
+  foldr f acc [] = acc
+  foldr f acc (x :: vect) = f x (foldr f acc vect)
+
+Eq ty => Eq (Vect n ty) where
+  (==) [] [] = True
+  (==) (x :: xs) (y :: ys) = if x == y 
+                                then xs == ys
+                                else False

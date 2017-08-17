@@ -28,12 +28,6 @@ Show GameState where
 setDifficulty : Int -> GameState -> GameState
 setDifficulty newDiff = record { difficulty = newDiff } 
 
-addWrong : GameState -> GameState
-addWrong = record { score -> attempted $= S }
-
-addCorrect : GameState -> GameState
-addCorrect = record { score->attempted $= S
-                    , score->correct $= S }
 
 data Command : Type -> Type where
   PutStrLn : String -> Command ()
@@ -58,7 +52,15 @@ Applicative Command where
 Monad Command where
   (>>=) = Bind
 
+addWrong : GameState -> GameState
+addWrong = record { score -> attempted $= S }
 
+addCorrect : GameState -> GameState
+addCorrect = record { score->attempted $= S
+                    , score->correct $= S }
+updateGameState : (GameState -> GameState) -> Command ()
+updateGameState f = do state <- GetGameState
+                       PutGameState (f state)
 
 runCommand : Stream Int -> GameState -> Command a -> IO (a, Stream Int, GameState)
 runCommand rnds state (PutStrLn x) = do putStrLn x
@@ -120,15 +122,13 @@ run (More fuel) stream state (Do z f) = do (res, newStream, newState) <- runComm
 
 mutual
   correct : ConsoleIO GameState
-  correct = do state <- GetGameState
-               PutStrLn "Correct!"
-               PutGameState (addCorrect state)
+  correct = do PutStrLn "Correct!"
+               updateGameState addCorrect
                quiz
 
   wrong : Int -> ConsoleIO GameState
-  wrong x = do state <- GetGameState
-               PutStrLn ("Wrong, the answer was " ++ show x)
-               PutGameState (addWrong state)
+  wrong x = do PutStrLn ("Wrong, the answer was " ++ show x)
+               updateGameState addWrong
                quiz
 
   quiz : ConsoleIO GameState

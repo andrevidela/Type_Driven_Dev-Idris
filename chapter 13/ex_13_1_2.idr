@@ -30,30 +30,6 @@ partial
 forever : Fuel
 forever = More forever
 
-
-testAdd : StackCmd Integer 0 0
-testAdd = do Push 10
-             Push 20
-             val1 <- Pop
-             val2 <- Pop
-             Pure (val1 + val2)
-
-doAdd : StackCmd () (S (S height)) (S height)
-doAdd = do val1 <- Pop
-           val2 <- Pop
-           Push (val1 + val2)
-
-
-doSubtract : StackCmd () (S (S h)) (S h)
-doSubtract = do val1 <- Pop
-                val2 <- Pop
-                Push (val2 - val1)
-
-doNeg : StackCmd () (S h) (S h)
-doNeg = do v <- Pop
-           Push (0 - v)
-
-
 runStack : (stk : Vect inHeight Integer) ->
            StackCmd ty inHeight outHeight ->
            IO (ty, Vect outHeight Integer)
@@ -76,42 +52,61 @@ run (More fuel) stk (Do x f) = do (res, newStk) <- runStack stk x
                                   run fuel newStk (f res)
 
 
-data StkInput = Add | Number Integer | Sub | Neg
+data StkInput = Add | Number Integer | Sub | Neg | Discard | Dup
 
 strToInput : String -> Maybe StkInput
 strToInput "" = Nothing
 strToInput "add" = Just Add
 strToInput "sub" = Just Sub
+strToInput "neg" = Just Neg
+strToInput "dup" = Just Dup
+strToInput "discard" = Just Discard
 strToInput num = if all isDigit (unpack num)
                     then Just (Number (cast num))
                     else Nothing
 
 mutual 
-  
-  tryGenOp : StackCmd () pre (S _) -> StackIO h
-  tryGenOp x {pre} {h} = case decEq pre h of
-                              (Yes Refl) => do x
-                                               res <- Top
-                                               PutStr (show res ++ "\n")
-                                               stackCalc
-                              (No contra) => do PutStr $ "not enough item on the stack, expected " ++
-                                                  (show pre) ++
-                                                  ", got " ++ 
-                                                  (show h) ++ "\n"
+
+  tryBinaryOp : (Integer -> Integer -> Integer) -> StackIO h
+  tryBinaryOp op { h = (S (S k))}= do i1 <- Pop
+                                      i2 <- Pop
+                                      Push (op i2 i1)
+                                      result <- Top
+                                      PutStr (show result ++ "\n")
+                                      stackCalc
+  tryBinaryOp op = do PutStr ("not enough elements on stack")
+                      stackCalc
+
+  tryUnaryOp : (Integer -> Integer) -> StackIO h
+  tryUnaryOp op {h = (S k)} = do val <- Pop
+                                 Push (op val)
+                                 result <- Top
+                                 PutStr (show result ++ "\n")
+                                 stackCalc
+  tryUnaryOp op = do PutStr ("not enough elements on stack")
+                     stackCalc
+
+  tryDup : StackIO h
+  tryDup {h = (S k)}= do val <- Top
+                         Push val
+                         PutStr ("duplicated " ++ show val ++ "\n")
+                         stackCalc
+  tryDup = do PutStr ("not enough elements on stack")
+              stackCalc
+
+  stackCalc : StackIO h
+  stackCalc {h}= do  PutStr "> "
+                     input <- GetStr
+                     case strToInput input of
+                          Nothing => do PutStr "Invalid Input\n"
+                                        stackCalc
+                          Just (Number x) => do Push x
                                                 stackCalc
-
-
-  stackCalc : StackIO height
-  stackCalc = do PutStr "> "
-                 input <- GetStr
-                 case strToInput input of
-                      Nothing => do PutStr "Invalid Input\n"
-                                    stackCalc
-                      Just (Number x) => do Push x
-                                            stackCalc
-                      Just (Add) => tryGenOp doAdd 
-                      Just (Sub) => tryGenOp doSubtract
-                      Just (Neg) => ?negation
+                          Just (Add) => tryBinaryOp (+)
+                          Just (Sub) => tryBinaryOp (-)
+                          Just (Neg) => tryUnaryOp (* (-1))
+                          Just (Discard) => tryBinaryOp (\f, s => f)
+                          Just (Dup) => tryDup
                       
 partial
 main : IO ()

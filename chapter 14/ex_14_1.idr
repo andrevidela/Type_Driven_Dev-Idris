@@ -28,3 +28,15 @@ session = do Correct <- Password "paasword"
              msg <- GetSecret
              PutStr ("Secret code : " ++ show msg ++ "\n")
              Logout
+
+-- sessionBad : ShellCmd () LoggedOut (const LoggedOut)
+-- sessionBad = do Password "paasword"
+--                 msg <- GetSecret
+--                 PutStr ("Secret Code: " ++ show msg ++ "\n")
+--                 Logout
+
+-- noLogout : ShellCmd () LoggedOut (const LoggedOut)
+-- noLogout = do Correct <- Password "paasword"
+--                 | Incorrect => PutStr "Wrong password"
+--               msg <- GetSecret
+--               PutStr ("Secret Code: " ++ show msg ++ "\n")
